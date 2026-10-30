@@ -1,0 +1,21 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+body{margin:0;background:#F0EDE8;font-family:Inter,system-ui,sans-serif;color:#29252D}
+.hd{font-family:'Plus Jakarta Sans',system-ui,sans-serif;letter-spacing:-.02em}
+.shell{max-width:430px;margin:0 auto;min-height:100dvh;background:#FAF8F4;position:relative}
+.btn-p{@apply h-[52px] w-full rounded-[14px] bg-plum text-white text-[15px] font-semibold flex items-center justify-center disabled:opacity-50}
+.btn-s{@apply h-[52px] w-full rounded-[14px] bg-plum-l text-plum text-[15px] font-semibold flex items-center justify-center}
+.btn-o{@apply h-[52px] w-full rounded-[14px] bg-white border border-line text-ink text-[15px] font-medium flex items-center justify-center}
+.btn-d{@apply h-[52px] w-full rounded-[14px] bg-white border border-danger text-danger text-[15px] font-medium flex items-center justify-center}
+.inp{@apply h-[52px] w-full rounded-[14px] bg-white border border-line px-4 text-[15px] text-ink box-border outline-none focus:border-plum}
+.crd{@apply bg-white border border-line rounded-[20px] p-4 shadow-[0_1px_3px_rgba(41,37,45,.04)]}
+.chip{@apply px-3.5 py-1.5 rounded-full text-[13px] font-medium border border-line text-mute bg-white min-h-[36px]}
+.chip.on{@apply bg-plum-l border-plum text-plum}
+.call-bg{background:radial-gradient(ellipse 120% 70% at 50% 30%,#5A3D6E 0%,#39264B 50%,#1E1528 90%)}
+@keyframes pulse-ring{0%{transform:scale(.8);opacity:.5}100%{transform:scale(1.8);opacity:0}}
+@keyframes orb-glow{0%,100%{box-shadow:0 0 40px rgba(57,38,75,.3)}50%{box-shadow:0 0 60px rgba(242,201,181,.45)}}
+@keyframes wave{0%,100%{height:12px}50%{height:28px}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes check-pop{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.ring{animation:pulse-ring 2s ease-out infinite}
+.orb{animation:orb-glow 3s ease-in-out infinite}
+.bar{width:3px;border-radius:2px;background:rgba(255,255,255,.6);animation:wave .7s ease-in-out infinite}

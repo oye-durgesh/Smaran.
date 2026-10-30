@@ -1,0 +1,17 @@
+{
+  "name": "smaran-bolna",
+  "private": true,
+  "workspaces": ["server", "web"],
+  "engines": {
+    "node": ">=22.0.0 <23",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web \"npm -w server run dev\" \"npm -w web run dev\"",
+    "build": "npm -w web run build",
+    "start": "npm -w server run start",
+    "check:voice": "npm -w server run check:voice --",
+    "test": "npm -w server run test && npm -w web run test"
+  },
+  "devDependencies": { "concurrently": "^9.0.0" }
+}

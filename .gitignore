@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Local SQLite and data
+data/
+*.db
+*.db-wal
+*.db-shm
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Logs and temp
+*.log
+logs/
+npm-debug.log*
+.tmp/
+.temp/
+*.tmp
+
+# OS / editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
