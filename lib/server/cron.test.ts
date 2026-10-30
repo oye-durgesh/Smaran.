@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { GET as cronTick } from '../../app/api/cron/tick/route';
@@ -20,6 +22,16 @@ describe('duplicate reminder prevention', () => {
     await tick(db, () => now);
     const rows = await db.prepare(`SELECT * FROM reminder_outcomes WHERE reminder_id='r1' AND kind='primary'`).all();
     expect(rows).toHaveLength(1);
+  });
+});
+
+describe('Vercel Hobby cron', () => {
+  it('uses a once-daily schedule, not hourly', () => {
+    const cfg = JSON.parse(readFileSync(path.join(process.cwd(), 'vercel.json'), 'utf8'));
+    expect(cfg.crons).toHaveLength(1);
+    expect(cfg.crons[0].path).toBe('/api/cron/tick');
+    expect(cfg.crons[0].schedule).toBe('0 0 * * *');
+    expect(cfg.crons[0].schedule).not.toMatch(/^\d+ \* /);
   });
 });
 

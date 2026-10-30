@@ -6,7 +6,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-/** Vercel Cron (and any authenticated scheduler) records due reminders without a long-running process. */
+/**
+ * Vercel Hobby allows one Cron Job per day (not hourly).
+ * This records due reminders in the database. It does not ring the phone
+ * and does not guarantee medicine times. Exact-time incoming screens still
+ * require the app to be open (/api/today and /api/incoming run tick()).
+ */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET?.trim();
   const auth = req.headers.get('authorization') ?? '';

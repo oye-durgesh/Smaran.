@@ -50,8 +50,10 @@ Create a free database: [neon.tech](https://neon.tech) → New project → copy 
 
 There is no always-on server. Due reminders are recorded when:
 
-1. The app is open (it asks `/api/incoming` and `/api/today`, which run the scheduler).
-2. Vercel Cron calls `/api/cron/tick` once per hour (`vercel.json`).
+1. **You open the app** — `/api/incoming` and `/api/today` run the scheduler. This is how on-time in-app reminders work.
+2. **Once a day** — Vercel Hobby Cron calls `/api/cron/tick` at `00:00 UTC` (`vercel.json`). Hobby does **not** allow hourly or per-minute Cron.
+
+A once-daily Cron **cannot** fire at each medicine time. It is only a daily backup to record overdue slots in the database. It does not show the incoming screen, start ElevenLabs, or mean a reminder was delivered.
 
 **If the phone is locked or the app is closed**, the incoming call screen cannot appear until you open Smaran Bolna again. This app does **not** claim a notification was delivered in that case.
 
