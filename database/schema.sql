@@ -1,38 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import Database from 'better-sqlite3';
+-- PostgreSQL schema for production (Neon / Vercel Postgres / any hosted Postgres).
+-- Applied automatically on first connection. Safe to re-run (IF NOT EXISTS).
 
-export type DB = Database.Database;
-
-function describeOpenFailure(file: string, err: unknown): Error {
-  const e = err as NodeJS.ErrnoException;
-  const detail = e?.stack || e?.message || String(err);
-  if (e?.code === 'ERR_DLOPEN_FAILED' || /NODE_MODULE_VERSION/.test(e?.message ?? '')) {
-    return new Error(
-      `Cannot load better-sqlite3 (native addon ABI mismatch). ` +
-        `This app requires Node.js 22 LTS (NODE_MODULE_VERSION 127). ` +
-        `You are running Node ${process.version} (NODE_MODULE_VERSION ${process.versions.modules}). ` +
-        `Install Node 22, then from the repo root run: npm.cmd install\n${detail}`,
-    );
-  }
-  return new Error(`Cannot open SQLite database at ${file}: ${e?.message || err}\n${detail}`);
-}
-
-export function openDb(file: string): DB {
-  const resolved = file === ':memory:' ? ':memory:' : path.resolve(file);
-  if (resolved !== ':memory:') {
-    fs.mkdirSync(path.dirname(resolved), { recursive: true });
-  }
-  console.log(`Opening SQLite database: ${resolved}`);
-  let db: Database.Database;
-  try {
-    db = new Database(resolved);
-  } catch (err) {
-    throw describeOpenFailure(resolved, err);
-  }
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.exec(`
 CREATE TABLE IF NOT EXISTS family_members (
   id TEXT PRIMARY KEY, name TEXT NOT NULL, relationship TEXT NOT NULL,
   avatar TEXT, notes TEXT,
@@ -56,20 +24,18 @@ CREATE TABLE IF NOT EXISTS reminders (
   id TEXT PRIMARY KEY,
   member_id TEXT NOT NULL REFERENCES family_members(id) ON DELETE CASCADE,
   medicine_id TEXT NOT NULL REFERENCES medicines(id) ON DELETE CASCADE,
-  time TEXT NOT NULL,                       -- HH:MM, Asia/Kolkata
+  time TEXT NOT NULL,
   repeat TEXT NOT NULL CHECK (repeat IN ('once','daily','weekdays')),
-  date TEXT,                                -- for 'once'
-  weekdays TEXT NOT NULL DEFAULT '[]',      -- JSON array 0-6
+  date TEXT,
+  weekdays TEXT NOT NULL DEFAULT '[]',
   voice_enabled INTEGER NOT NULL DEFAULT 1, conversation_enabled INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','paused','cancelled')),
   is_demo INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
 );
--- One row per occurrence of a reminder. Holds the state and the structured outcome only.
--- It never holds anything that was said during a call.
 CREATE TABLE IF NOT EXISTS reminder_outcomes (
   id TEXT PRIMARY KEY,
   reminder_id TEXT NOT NULL REFERENCES reminders(id) ON DELETE CASCADE,
-  scheduled_for TEXT NOT NULL,              -- UTC ISO
+  scheduled_for TEXT NOT NULL,
   kind TEXT NOT NULL DEFAULT 'primary' CHECK (kind IN ('primary','follow_up','retry')),
   state TEXT NOT NULL DEFAULT 'scheduled'
     CHECK (state IN ('scheduled','due','connecting','connected','processing','completed','pending','declined','missed','failed')),
@@ -84,7 +50,7 @@ CREATE TABLE IF NOT EXISTS health_readings (
   id TEXT PRIMARY KEY,
   member_id TEXT NOT NULL REFERENCES family_members(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('bp','glucose')),
-  systolic INTEGER, diastolic INTEGER, glucose REAL,
+  systolic INTEGER, diastolic INTEGER, glucose DOUBLE PRECISION,
   unit TEXT NOT NULL, measured_at TEXT NOT NULL, note TEXT,
   is_demo INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
 );
@@ -97,6 +63,3 @@ CREATE TABLE IF NOT EXISTS appointments (
   is_demo INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-`);
-  return db;
-}

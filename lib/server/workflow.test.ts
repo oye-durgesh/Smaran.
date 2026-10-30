@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
-import { openDb } from '../src/db.js';
-import { createApp } from '../src/app.js';
-import { fromIst } from '../src/time.js';
+import { openDb, type DB } from './db.js';
+import { createApp } from './app.js';
+import { fromIst } from './time.js';
 
 const AGENTS = { apiKey: 'test-key', mummyAgentId: 'agent_mummy', papaAgentId: 'agent_papa' };
 let now: Date;
 let fetchFn: ReturnType<typeof vi.fn>;
 let api: ReturnType<typeof request>;
 let auth: { Authorization: string };
-let db: ReturnType<typeof openDb>;
+let db: DB;
 
 const get = (p: string) => api.get(p).set(auth);
 const post = (p: string, b: object = {}) => api.post(p).set(auth).send(b);
@@ -17,7 +17,7 @@ const post = (p: string, b: object = {}) => api.post(p).set(auth).send(b);
 beforeEach(async () => {
   now = fromIst('2026-10-30', '07:00');                  // 7:00 AM IST
   fetchFn = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ signed_url: 'wss://signed.example/abc' }) }));
-  db = openDb(':memory:');
+  db = await openDb(':memory:');
   api = request(createApp({ db, clock: () => now, agents: AGENTS, fetchFn: fetchFn as any }));
   const r = await api.post('/api/account').send({ name: 'Durgesh', email: 'd@example.com', password: 'password123' });
   auth = { Authorization: `Bearer ${r.body.token}` };
@@ -91,14 +91,14 @@ describe('reminder → incoming → answer → outcome', () => {
   it('unclear / not_taken / unconfirmed outcomes never complete the dose or use stock', async () => {
     now = fromIst('2026-10-30', '20:00');
     const o = await findOcc('Papa', 'Vitamin D3');
-    const stock = () => (db.prepare(`SELECT stock_qty FROM medicines WHERE name='Vitamin D3'`).get() as any).stock_qty;
-    const before = stock();
+    const stock = async () => ((await db.prepare(`SELECT stock_qty FROM medicines WHERE name='Vitamin D3'`).get()) as any).stock_qty;
+    const before = await stock();
     await post(`/api/occurrences/${o.id}/answer`);
     await post(`/api/occurrences/${o.id}/outcome`, { outcome: 'unconfirmed', source: 'agent' });
     expect((await findOcc('Papa', 'Vitamin D3')).state).toBe('pending');
-    expect(stock()).toBe(before);
+    expect(await stock()).toBe(before);
     await post(`/api/occurrences/${o.id}/outcome`, { outcome: 'taken', source: 'manual' });
-    expect(stock()).toBe(before - 1);
+    expect(await stock()).toBe(before - 1);
   });
 
   it('agent-reported outcome is refused unless a call is actually active', async () => {
@@ -165,7 +165,7 @@ describe('reminder → incoming → answer → outcome', () => {
 
 describe('agent mapping', () => {
   it('Mummy and Papa get their agent; Dadi, Durgesh and others get none', async () => {
-    const { agentKeyFor } = await import('../src/agents.js');
+    const { agentKeyFor } = await import('./agents.js');
     expect([agentKeyFor('Mummy'), agentKeyFor(' papa '), agentKeyFor('Dadi'), agentKeyFor('Durgesh'), agentKeyFor('Me')]).toEqual(['mummy', 'papa', null, null, null]);
   });
 
@@ -213,8 +213,8 @@ describe('data safety', () => {
     expect((await get('/api/family')).body.length).toBe(4);
   });
 
-  it('schema has no transcript or audio columns', () => {
-    const cols = db.prepare(`SELECT m.name t, p.name c FROM sqlite_master m, pragma_table_info(m.name) p WHERE m.type='table'`).all() as any[];
+  it('schema has no transcript or audio columns', async () => {
+    const cols = await db.prepare(`SELECT m.name t, p.name c FROM sqlite_master m, pragma_table_info(m.name) p WHERE m.type='table'`).all() as any[];
     expect(cols.filter(x => /transcript|audio|message|recording/i.test(x.c))).toEqual([]);
   });
 

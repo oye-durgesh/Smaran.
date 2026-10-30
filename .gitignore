@@ -8,7 +8,10 @@ node_modules/
 dist/
 build/
 coverage/
+.next/
+out/
 *.tsbuildinfo
+.env.local
 
 # Local SQLite and data
 data/

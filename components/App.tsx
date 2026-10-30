@@ -1,3 +1,4 @@
+'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, hasToken, Occ } from './api';
 import { AppointmentDetail, AppointmentForm, AppointmentList } from './Appointments';

@@ -1,5 +1,6 @@
-let token = localStorage.getItem('smaran_token') ?? '';
-export const setToken = (t: string) => { token = t; t ? localStorage.setItem('smaran_token', t) : localStorage.removeItem('smaran_token'); };
+const store = () => (typeof window === 'undefined' ? null : window.localStorage);
+let token = store()?.getItem('smaran_token') ?? '';
+export const setToken = (t: string) => { token = t; t ? store()?.setItem('smaran_token', t) : store()?.removeItem('smaran_token'); };
 export const hasToken = () => !!token;
 
 export class ApiError extends Error { constructor(public status: number, public body: any) { super(body?.message ?? body?.error ?? 'Request failed'); } }

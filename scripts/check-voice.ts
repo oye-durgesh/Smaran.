@@ -3,9 +3,11 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agentConfigFromEnv, agentKeyFor, getSignedUrl } from '../src/agents.js';
+import { agentConfigFromEnv, agentKeyFor, getSignedUrl } from '../lib/server/agents.js';
 
-dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.env') });
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+dotenv.config({ path: path.join(root, '.env') });
+dotenv.config({ path: path.join(root, '.env.local') });
 const cfg = agentConfigFromEnv();
 const live = process.argv.includes('--live');
 let bad = 0;
